@@ -37,4 +37,36 @@ jobs:
           push: true
           tags: wasimhannure/swiggy-app:latest
 
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Install Azure CLI
+        uses: Azure/cli@v2.2.0
+        with:
+            inlineScript: |
+              az --version
+
+      - name: Create Resource Group
+        run: |
+          az group create --name swiggy-clone --location eastus
+
+      - name: create aks cluster
+        run: |
+          az aks create --resource-group swiggy-clone --name swiggy-clone-aks --node-count 1 --generate-ssh-keys
+
+      - name: Get AKS Credentials
+        run: |
+            az aks get-credentials --resource-group swiggy-clone --name swiggy-clone-aks
+
+      - name: set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Deploy to AKS
+        run: |
+          kubectl apply -f deployment-and-service.yml
+
     
